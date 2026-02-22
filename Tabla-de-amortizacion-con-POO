@@ -1,0 +1,75 @@
+using Spectre.Console;
+using System;
+class Program
+{
+    private static decimal monto;
+    private static decimal tasaAnual;
+    private static int plazo;
+    private static decimal cuotaFija;
+
+    static void Main(string[] args)
+    {
+        MostrarTitulo();
+        CapturarDatos();
+        CalcularCuota();
+        GenerarTablaAmortizacion();
+        MostrarCuotaFinal();
+    }
+    private static void MostrarTitulo()
+    {
+        AnsiConsole.MarkupLine("[Blue]TABLA DE AMORTIZACIÓN (POO)[/]");
+        AnsiConsole.WriteLine();
+    }
+    private static void CapturarDatos()
+    {
+        monto = AnsiConsole.Ask<decimal>("[Blue]Cual es el monto del préstamo?[/]: ");
+        tasaAnual = AnsiConsole.Ask<decimal>("[Blue]Cual es la tasa de interés anual? (en porcentaje) [/]: ");
+        plazo = AnsiConsole.Ask<int>("[Blue]Cuales son los plazos? (en meses)[/]: ");
+    }
+    private static void CalcularCuota()
+    {
+        decimal tasaMensual = (tasaAnual / 100m) / 12m;
+
+        cuotaFija = monto * tasaMensual /
+            (decimal)(1 - Math.Pow(1 + (double)tasaMensual, -plazo));
+
+        cuotaFija = Math.Round(cuotaFija, 2);
+    }
+    private static void GenerarTablaAmortizacion()
+    {
+        var table = new Table();
+        table.Border = TableBorder.Rounded;
+
+        table.AddColumn("[Red]No. Cuota[/]");
+        table.AddColumn("[Blue]Pago de Cuota[/]");
+        table.AddColumn("[Green]Interés[/]");
+        table.AddColumn("[Purple]Abono a Capital[/]");
+        table.AddColumn("[Gray]Saldo[/]");
+
+        decimal saldo = monto;
+        decimal tasaMensual = (tasaAnual / 100m) / 12m;
+
+        for (int mes = 1; mes <= plazo; mes++)
+        {
+            decimal interes = Math.Round(saldo * tasaMensual, 2);
+            decimal abonoCapital = Math.Round(cuotaFija - interes, 2);
+            saldo = Math.Round(saldo - abonoCapital, 2);
+
+            if (saldo < 0)
+                saldo = 0;
+            table.AddRow(
+                mes.ToString(),
+                cuotaFija.ToString("N2"),
+                interes.ToString("N2"),
+                abonoCapital.ToString("N2"),
+                saldo.ToString("N2")
+            );
+        }
+
+        AnsiConsole.Write(table);
+    }
+    private static void MostrarCuotaFinal()
+    {
+        AnsiConsole.MarkupLine($"\n[Yellow]Cuota fija mensual: {cuotaFija.ToString("N2")}[/]");
+    }
+}
