@@ -1,0 +1,41 @@
+using Spectre.Console;
+using System;
+class Program
+{
+    static void Main(string[] args)
+    {
+        AnsiConsole.MarkupLine("[blue]TABLA DE AMORTIZACIÓN[/]");
+        decimal monto = AnsiConsole.Ask<decimal>("[blue]Cual es el monto del préstamo?[/]: ");
+        decimal tasaAnual = AnsiConsole.Ask<decimal>("[blue]Cual es la tasa de interés anual (ingrese el porcentaje) [/]: ");
+        int plazo = AnsiConsole.Ask<int>("[blue]Cuales son los plazos (en meses)[/]: ");
+        decimal tasaMensual = (tasaAnual / 100m) / 12m;
+        decimal cuota = monto * tasaMensual / (decimal)(1 - Math.Pow(1 + (double)tasaMensual, -plazo));
+        cuota = Math.Round(cuota, 2);
+        var table = new Table();
+        table.Border = TableBorder.Rounded;
+        table.AddColumn("[Red]No. Cuota[/]");
+        table.AddColumn("[Blue]Pago de Cuota[/]");
+        table.AddColumn("[Green]Interés[/]");
+        table.AddColumn("[Purple]Abono a Capital[/]");
+        table.AddColumn("[Gray]Saldo[/]");
+        decimal saldo = monto;
+
+        for (int mes = 1; mes <= plazo; mes++)
+        {
+            decimal interes = Math.Round(saldo * tasaMensual, 2);
+            decimal abonoCapital = Math.Round(cuota - interes, 2);
+            saldo = Math.Round(saldo - abonoCapital, 2);
+            if (saldo < 0)
+                saldo = 0;
+            table.AddRow(
+                mes.ToString(),
+                cuota.ToString("N2"),
+                interes.ToString("N2"),
+                abonoCapital.ToString("N2"),
+                saldo.ToString("N2")
+            );
+        }
+        AnsiConsole.Write(table);
+        AnsiConsole.MarkupLine($"\n[Yellow]Cuota fija mensual: {cuota.ToString("N2")}[/]");
+    }
+}
